@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>🪚Carpenter's Calculator📏</title>
+    <style>
+      /* Styling for the calculator container */
+      .calculator {
+        width: 300px;
+        margin: 50px auto;
+        padding: 20px;
+        background-color: #f0f0f0;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+
+      /* Styling for the input display */
+      #input {
+        width: 100%;
+        margin-bottom: 10px;
+        padding: 10px;
+        font-size: 20px;
+        text-align: right;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        box-sizing: border-box;
+      }
+
+      /* Layout for buttons in a grid */
+      .buttons {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 5px;
+      }
+
+      /* Base styling for calculator buttons */
+      .button {
+        padding: 15px;
+        font-size: 18px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        background-color: #fff;
+        transition: background-color 0.2s;
+      }
+
+      /* Styling for hover effect on buttons */
+      .button:hover {
+        background-color: #e0e0e0;
+      }
+
+      /* Specific styling for operator buttons */
+      .operator {
+        background-color: #f8a51d;
+        color: white;
+      }
+
+      .operator:hover {
+        background-color: #e59400;
+      }
+
+      /* Styling for clear button */
+      .clear {
+        background-color: #ff4444;
+        color: white;
+      }
+
+      .clear:hover {
+        background-color: #cc0000;
+      }
+
+      /* Styling for equals button */
+      .equals {
+        background-color: #4caf50;
+        color: white;
+      }
+
+      .equals:hover {
+        background-color: #45a049;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="calculator">
+      <h2>🪚Carpenter's Calculator📏</h2>
+      <form name="form" onsubmit="return false">
+        <input type="text" name="input" id="input" placeholder="0" readonly />
+        <div class="buttons">
+          <!-- Calculator buttons with different classes for clear, operator, and number buttons -->
+          <button type="button" class="button clear" onclick="clearDisplay()">C</button>
+          <button type="button" class="button operator" onclick="addOperator('(')">(</button>
+          <button type="button" class="button operator" onclick="addOperator(')')">)</button>
+          <button type="button" class="button operator" onclick="addOperator('/')">÷</button>
+
+          <button type="button" class="button" onclick="addNumber(7)">7</button>
+          <button type="button" class="button" onclick="addNumber(8)">8</button>
+          <button type="button" class="button" onclick="addNumber(9)">9</button>
+          <button type="button" class="button operator" onclick="addOperator('*')">×</button>
+
+          <button type="button" class="button" onclick="addNumber(4)">4</button>
+          <button type="button" class="button" onclick="addNumber(5)">5</button>
+          <button type="button" class="button" onclick="addNumber(6)">6</button>
+          <button type="button" class="button operator" onclick="addOperator('-')">−</button>
+
+          <button type="button" class="button" onclick="addNumber(1)">1</button>
+          <button type="button" class="button" onclick="addNumber(2)">2</button>
+          <button type="button" class="button" onclick="addNumber(3)">3</button>
+          <button type="button" class="button operator" onclick="addOperator('+')">+</button>
+
+          <button type="button" class="button" onclick="addNumber(0)">0</button>
+          <button type="button" class="button" onclick="addDecimal()">.</button>
+          <button type="button" class="button" onclick="deleteLastChar()">←</button>
+          <button type="button" class="button equals" onclick="calculate()">=</button>
+        </div>
+      </form>
+    </div>
+
+    <script>
+      /* Flags to track the type of last input */
+      let lastInputWasOperator = false;
+      let lastWasResult = false;
+      const maxLength = 20;
+
+      /* Adds a number to the input */
+      function addNumber(num) {
+        const input = document.form.input;
+        if (input.value.length < maxLength) {
+          if (lastWasResult) {
+            input.value = num;
+            lastWasResult = false;
+          } else {
+            input.value += num;
+          }
+          lastInputWasOperator = false;
+        }
+      }
+
+      /* Adds an operator to the input, handles parentheses and operator replacements */
+      function addOperator(operator) {
+        const input = document.form.input;
+        const currentValue = input.value;
+
+        lastWasResult = false;
+
+        /* Allow starting with a negative sign */
+        if (currentValue === "" && operator === "-") {
+          input.value = operator;
+          lastInputWasOperator = true;
+          return;
+        }
+
+        /* Disallow invalid starting operators */
+        if (currentValue === "" && !["(", ")"].includes(operator)) {
+          return;
+        }
+
+        const lastChar = currentValue[currentValue.length - 1];
+        const operators = ["+", "-", "*", "/", "("];
+
+        /* Handle parentheses */
+        if (operator === "(" || operator === ")") {
+          const openParenCount = (currentValue.match(/\(/g) || []).length;
+          const closeParenCount = (currentValue.match(/\)/g) || []).length;
+
+          if (operator === ")" && openParenCount <= closeParenCount) {
+            return;
+          }
+
+          if (operator === "(" && !lastInputWasOperator && currentValue !== "") {
+            return;
+          }
+        }
+
+        /* Replace last operator if current character is also an operator */
+        if (operators.includes(lastChar) && operator !== "(") {
+          input.value = currentValue.slice(0, -1) + operator;
+        } else if (input.value.length < maxLength) {
+          input.value += operator;
+        }
+
+        lastInputWasOperator = true;
+      }
+
+      /* Calculates division with remainder */
+      function calculateDivisionWithRemainder(dividend, divisor) {
+        const quotient = Math.floor(dividend / divisor);
+        const remainder = dividend % divisor;
+        return {
+          quotient: quotient,
+          remainder: remainder,
+          decimal: dividend / divisor,
+          formattedResult: `${quotient} parts of ${divisor} (remaining ${remainder})`,
+        };
+      }
+
+      /* Calculates the result and displays it */
+      function calculate() {
+        try {
+          const input = document.form.input;
+          if (input.value) {
+            const divisionRegex = /^\s*(\d+)\s*\/\s*(\d+)\s*$/;
+            const match = input.value.match(divisionRegex);
+
+            /* Perform division with remainder if matched */
+            if (match) {
+              const dividend = parseInt(match[1]);
+              const divisor = parseInt(match[2]);
+
+              if (divisor === 0) {
+                throw new Error("Cannot divide by zero");
+              }
+
+              const result = calculateDivisionWithRemainder(dividend, divisor);
+              input.value = result.formattedResult;
+              lastWasResult = true;
+              return;
+            }
+
+            /* Calculate result if expression is valid */
+            const sanitizedExpression = input.value.replace(/[^\d+\-*/().]/g, "");
+            const result = Function('"use strict";return (' + sanitizedExpression + ")")();
+
+            input.value = parseFloat(result.toFixed(8)).toString();
+          }
+        } catch (e) {
+          document.form.input.value = "Error";
+          setTimeout(clearDisplay, 1000);
+        }
+        lastInputWasOperator = false;
+        lastWasResult = true;
+      }
+
+      /* Clears the display */
+      function clearDisplay() {
+        document.form.input.value = "";
+        lastInputWasOperator = false;
+        lastWasResult = false;
+      }
+
+      /* Adds a decimal point to the current number */
+      function addDecimal() {
+        const input = document.form.input;
+
+        if (lastWasResult) {
+          input.value = "0.";
+          lastWasResult = false;
+          return;
+        }
+
+        const currentValue = input.value;
+        const numbers = currentValue.split(/[\+\-\*\/]/);
+        const lastNumber = numbers[numbers.length - 1];
+
+        if (!lastNumber.includes(".") && !lastInputWasOperator) {
+          input.value += ".";
+        }
+      }
+
+      /* Deletes the last character in the display */
+      function deleteLastChar() {
+        const input = document.form.input;
+        input.value = input.value.slice(0, -1);
+        lastWasResult = false;
+      }
+
+      /* Adds keyboard support for calculator operations */
+      document.addEventListener("keydown", function (event) {
+        const key = event.key;
+
+        /* Handle number, operator, and special keys */
+        if (!isNaN(key)) {
+          addNumber(key);
+        } else if (["+","-","*","/","(",")"].includes(key)) {
+          addOperator(key);
+        } else if (key === "Enter") {
+          event.preventDefault();
+          calculate();
+        } else if (key === "Backspace") {
+          deleteLastChar();
+        } else if (key === ".") {
+          addDecimal();
+        } else if (key === "Escape") {
+          clearDisplay();
+        }
+      });
+    </script>
+  </body>
+</html>
